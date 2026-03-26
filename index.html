@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tango Fiber - TN 811 Ticket Dashboard</title>
+    <title>mStreet - TN 811 Ticket Dashboard</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -351,7 +351,6 @@
                 '<th>Status</th>' +
                 '<th>Pending</th>' +
                 '<th class="sortable" data-column="expires">Expires</th>' +
-                '<th class="sortable" data-column="footage">Footage</th>' +
                 '<th class="sortable" data-column="workType">Work Type</th>' +
                 '<th style="width:30px;"></th>' +
                 '</tr></thead><tbody>';
@@ -375,12 +374,11 @@
                     '<td>' + getStatusBadge(t) + '</td>' +
                     '<td style="font-size:0.82em;color:#d97706;">' + pendingDisplay + '</td>' +
                     '<td>' + (t.expires || '-') + '</td>' +
-                    '<td style="text-align:right;font-weight:600;color:#60a5fa;">' + (t.footage ? t.footage + ' ft' : '-') + '</td>' +
                     '<td style="font-size:0.82em;">' + (t.workType || '-') + '</td>' +
                     '<td style="text-align:center;">' + (hasMap ? '<span style="cursor:pointer;font-size:1.1em;" onclick="event.stopPropagation();selectTicket(\'' + t.ticket + '\')" title="Show on map">' + hasMap + '</span>' : '') + '</td>' +
                     '</tr>' +
                     '<tr class="detail-row" id="detail-' + t.ticket + '">' +
-                    '<td colspan="12"><div class="detail-content">' + renderDetail(t) + '</div></td></tr>';
+                    '<td colspan="11"><div class="detail-content">' + renderDetail(t) + '</div></td></tr>';
             });
 
             html += '</tbody></table>';
