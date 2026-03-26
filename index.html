@@ -33,7 +33,6 @@
         .stat-card.attention .stat-value { color: #ff9800; }
         .stat-card.total .stat-value { color: #2196f3; }
         .stat-card.county .stat-value { color: #ab47bc; font-size: 1.8em; }
-
         .map-section { margin-bottom: 30px; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
         .map-header {
             background: rgba(255,255,255,0.08); padding: 12px 20px;
@@ -46,7 +45,7 @@
         .legend-clear { background: #4caf50; border-color: #4caf50; }
         .legend-attention { background: #f44336; border-color: #f44336; }
         .legend-unknown { background: #9e9e9e; border-color: #9e9e9e; }
-        #ticketMap { height: 550px; width: 100%; background: #1a1a2e; }
+        #ticketMap { height: 800px; width: 100%; background: #1a1a2e; }
         .map-toggle-btn {
             padding: 6px 14px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2);
             background: rgba(255,255,255,0.1); color: #fff; cursor: pointer; font-size: 0.85em; transition: all 0.2s;
@@ -60,7 +59,6 @@
         }
         .map-deselect-btn:hover { background: rgba(255,152,0,0.3); }
         .map-deselect-btn.show { display: inline-block; }
-
         .leaflet-popup-content-wrapper {
             background: #2a2a3e; color: #e0e0e0; border-radius: 10px;
             border: 1px solid rgba(255,255,255,0.15);
@@ -71,7 +69,6 @@
         .popup-status { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
         .popup-clear { background: rgba(76,175,80,0.25); color: #4caf50; }
         .popup-attention { background: rgba(244,67,54,0.25); color: #f44336; }
-
         .controls { margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap; align-items: center; }
         .search-box {
             flex: 1; min-width: 250px; padding: 12px 20px;
@@ -86,9 +83,11 @@
         }
         .filter-button:hover { background: rgba(255,255,255,0.2); }
         .filter-button.active { background: #2196f3; border-color: #2196f3; }
-        .download-button { padding: 12px 24px; background: #4caf50; border: none; border-radius: 8px; color: #fff; cursor: pointer; font-weight: bold; transition: all 0.2s; font-size: 0.95em; }
+        .download-button {
+            padding: 12px 24px; background: #4caf50; border: none; border-radius: 8px;
+            color: #fff; cursor: pointer; font-weight: bold; transition: all 0.2s; font-size: 0.95em;
+        }
         .download-button:hover { background: #45a049; transform: scale(1.05); }
-
         table { width: 100%; background: rgba(255,255,255,0.05); border-radius: 12px; overflow: hidden; border-collapse: collapse; }
         thead { background: rgba(255,255,255,0.1); }
         th {
@@ -96,20 +95,18 @@
             font-size: 0.8em; letter-spacing: 1px; cursor: pointer; user-select: none; white-space: nowrap;
         }
         th:hover { background: rgba(255,255,255,0.15); }
-        th.sortable::after { content: ' ↕'; opacity: 0.3; }
-        th.sort-asc::after { content: ' ↑'; opacity: 1; }
-        th.sort-desc::after { content: ' ↓'; opacity: 1; }
+        th.sortable::after { content: ' \2195'; opacity: 0.3; }
+        th.sort-asc::after { content: ' \2191'; opacity: 1; }
+        th.sort-desc::after { content: ' \2193'; opacity: 1; }
         td { padding: 12px; border-top: 1px solid rgba(255,255,255,0.05); font-size: 0.9em; }
         tr { transition: background 0.2s; }
         tbody tr:hover { background: rgba(255,255,255,0.08); cursor: pointer; }
         tbody tr.highlighted { background: rgba(33,150,243,0.15); }
-
         .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.8em; font-weight: 600; text-transform: uppercase; white-space: nowrap; }
         .badge.clear { background: rgba(76,175,80,0.2); color: #4caf50; border: 1px solid #4caf50; }
         .badge.attention { background: rgba(255,152,0,0.2); color: #ff9800; border: 1px solid #ff9800; }
         .badge.unmarked { background: rgba(244,67,54,0.2); color: #f44336; border: 1px solid #f44336; }
         .badge.unknown { background: rgba(158,158,158,0.2); color: #9e9e9e; border: 1px solid #9e9e9e; }
-
         .detail-row { display: none; background: rgba(0,0,0,0.3); }
         .detail-row.show { display: table-row; }
         .detail-content { padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
@@ -127,7 +124,6 @@
         .no-results { text-align: center; padding: 40px; color: #888; font-size: 1.2em; }
         .loading { text-align: center; padding: 60px; font-size: 1.5em; color: #888; }
         .fda-tag { background: rgba(171,71,188,0.2); color: #ce93d8; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; }
-
         @media (max-width: 768px) {
             h1 { font-size: 1.8em; }
             .stats { grid-template-columns: 1fr; }
@@ -140,24 +136,22 @@
 <body>
     <div class="container">
         <header>
-            <h1>🚧 mStreet 811 Tickets</h1>
-            <div class="Created by John Bennett and updated" id="lastUpdated">Loading...</div>
+            <h1>mStreet 811 Tickets</h1>
+            <div class="updated" id="lastUpdated">Loading...</div>
         </header>
-
         <div class="stats" id="stats">
             <div class="stat-card total"><div class="stat-value" id="totalCount">-</div><div class="stat-label">Total Tickets</div></div>
             <div class="stat-card clear"><div class="stat-value" id="clearCount">-</div><div class="stat-label">All Clear</div></div>
             <div class="stat-card attention"><div class="stat-value" id="attentionCount">-</div><div class="stat-label">Need Attention</div></div>
             <div class="stat-card county"><div class="stat-value" id="countyCount">-</div><div class="stat-label">Counties</div></div>
         </div>
-
         <div class="map-section">
             <div class="map-header">
-                <h2>📍 Ticket Locations</h2>
+                <h2>Ticket Locations</h2>
                 <div style="display:flex;gap:8px;align-items:center;">
                     <button class="map-toggle-btn" id="btnSatellite" onclick="setMapLayer('satellite')">Satellite</button>
                     <button class="map-toggle-btn active" id="btnStreet" onclick="setMapLayer('street')">Street</button>
-                    <button class="map-deselect-btn" id="btnDeselect" onclick="deselectTicket()">✕ Deselect</button>
+                    <button class="map-deselect-btn" id="btnDeselect" onclick="deselectTicket()">Deselect</button>
                 </div>
                 <div class="map-legend">
                     <span><div class="legend-dot legend-clear"></div> All Clear</span>
@@ -167,18 +161,15 @@
             </div>
             <div id="ticketMap"></div>
         </div>
-
         <div class="controls">
             <input type="text" class="search-box" id="searchBox" placeholder="Search (ticket #, county, city, street, FDA, Cx partner...)">
             <button class="filter-button active" data-filter="all">All</button>
             <button class="filter-button" data-filter="clear">All Clear</button>
             <button class="filter-button" data-filter="attention">Needs Attention</button>
-            <button class="download-button" onclick="downloadCSV()">?? Download Excel Report</button>
+            <button class="download-button" onclick="downloadCSV()">Download Excel Report</button>
         </div>
-
         <div id="tableContainer"><div class="loading">Loading ticket data...</div></div>
     </div>
-
     <script>
         var allTickets = [];
         var currentFilter = 'all';
@@ -191,13 +182,13 @@
         function initMap() {
             map = L.map('ticketMap', { zoomControl: true });
             satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Esri', maxZoom: 19 });
-            streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap', maxZoom: 19 });
+            streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: 'OpenStreetMap', maxZoom: 19 });
             labelsLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, opacity: 0.7 });
             streetLayer.addTo(map);
             ghostRectsLayer = L.layerGroup().addTo(map);
             markersLayer = L.layerGroup().addTo(map);
             highlightLayer = L.layerGroup().addTo(map);
-            map.setView([35.5, -86.5], 7); // Tennessee center
+            map.setView([35.5, -86.5], 7);
             map.on('click', function(e) { if (selectedTicket && !e.originalEvent._fromMarker) deselectTicket(); });
         }
 
@@ -233,6 +224,7 @@
                 '<strong>City:</strong> ' + (t.city || 'N/A') + ', ' + (t.county || '') + '<br>' +
                 '<strong>Work:</strong> ' + (t.workType || 'N/A') + '<br>' +
                 '<strong>Cx Partner:</strong> ' + (t.cxPartner || t.excavator || 'N/A') + '<br>' +
+                '<strong>Footage:</strong> ' + (t.footage ? t.footage + ' ft' : 'N/A') + '<br>' +
                 '<strong>Expires:</strong> ' + (t.expires || 'N/A') + '<br>' +
                 '<strong>Responses:</strong> ' + (summary.marked || 0) + ' marked, ' +
                 (summary.clear || 0) + ' clear, ' + (summary.unmarked || 0) + ' unmarked';
@@ -293,19 +285,18 @@
             try {
                 var response = await fetch('SUMMARY-DATA.json');
                 var data = await response.json();
-                document.getElementById('lastUpdated').textContent = 'Last updated: ' + (data.generated || 'Unknown');
+                document.getElementById('lastUpdated').textContent = 'Created by John Bennett | Last updated: ' + (data.generated || 'Unknown');
                 document.getElementById('totalCount').textContent = data.totalTickets || 0;
                 document.getElementById('clearCount').textContent = data.allClearCount || 0;
                 document.getElementById('attentionCount').textContent = data.attentionCount || 0;
                 allTickets = data.tickets || [];
-                // Count unique counties
                 var counties = {};
                 allTickets.forEach(function(t) { if (t.county) counties[t.county] = true; });
                 document.getElementById('countyCount').textContent = Object.keys(counties).length;
                 renderTable();
                 renderMap(allTickets);
             } catch (error) {
-                document.getElementById('tableContainer').innerHTML = '<div class="no-results">❌ Error loading SUMMARY-DATA.json. Run tn811_to_dashboard.py first.</div>';
+                document.getElementById('tableContainer').innerHTML = '<div class="no-results">Error loading SUMMARY-DATA.json.</div>';
                 console.error(error);
             }
         }
@@ -329,21 +320,19 @@
                 }
                 return true;
             });
-
             if (currentSort.column) {
                 filtered.sort(function(a, b) {
                     var vA = a[currentSort.column] || '', vB = b[currentSort.column] || '';
+                    if (currentSort.column === 'footage') { vA = parseInt(vA) || 0; vB = parseInt(vB) || 0; }
                     if (vA < vB) return currentSort.direction === 'asc' ? -1 : 1;
                     if (vA > vB) return currentSort.direction === 'asc' ? 1 : -1;
                     return 0;
                 });
             }
-
             if (filtered.length === 0) {
                 document.getElementById('tableContainer').innerHTML = '<div class="no-results">No tickets match your search/filter.</div>';
                 return;
             }
-
             var html = '<table><thead><tr>' +
                 '<th class="sortable" data-column="ticket">Ticket #</th>' +
                 '<th class="sortable" data-column="fda">FDA</th>' +
@@ -358,7 +347,6 @@
                 '<th class="sortable" data-column="workType">Work Type</th>' +
                 '<th style="width:30px;"></th>' +
                 '</tr></thead><tbody>';
-
             filtered.forEach(function(t) {
                 var summary = t.responseSummary || {};
                 var pendingUtilities = (t.responses || [])
@@ -367,7 +355,6 @@
                     .filter(function(n) { return n; });
                 var pendingDisplay = pendingUtilities.length > 0 ? pendingUtilities.join(', ') : '-';
                 var hasMap = t.boundary ? '📍' : '';
-
                 html += '<tr data-ticket="' + t.ticket + '" onclick="onRowClick(\'' + t.ticket + '\')">' +
                     '<td><strong>' + t.ticket + '</strong></td>' +
                     '<td>' + (t.fda ? '<span class="fda-tag">' + t.fda + '</span>' : '-') + '</td>' +
@@ -385,10 +372,8 @@
                     '<tr class="detail-row" id="detail-' + t.ticket + '">' +
                     '<td colspan="12"><div class="detail-content">' + renderDetail(t) + '</div></td></tr>';
             });
-
             html += '</tbody></table>';
             document.getElementById('tableContainer').innerHTML = html;
-
             document.querySelectorAll('th').forEach(function(th) {
                 th.classList.remove('sort-asc', 'sort-desc');
                 if (th.dataset.column === currentSort.column) th.classList.add(currentSort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
@@ -406,35 +391,28 @@
         function renderDetail(t) {
             var summary = t.responseSummary || {};
             var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">';
-
-            // Left column
-            html += '<div><div class="detail-section"><h4>📍 Location</h4>' +
+            html += '<div><div class="detail-section"><h4>Location</h4>' +
                 '<p><strong>Address:</strong> ' + (t.street || 'N/A') + '</p>' +
                 '<p><strong>Intersection:</strong> ' + (t.cross1 || 'N/A') + '</p>' +
                 '<p><strong>City:</strong> ' + (t.city || 'N/A') + ', ' + (t.county || '') + ' Co.</p>' +
                 '<p><strong>Directions:</strong> ' + (t.drivingDirections || 'N/A') + '</p>' +
                 '<p><strong>Remarks:</strong> ' + (t.remarks || 'N/A') + '</p>' +
                 '</div></div>';
-
-            // Right column
-            html += '<div><div class="detail-section"><h4>📋 Ticket Info</h4>' +
+            html += '<div><div class="detail-section"><h4>Ticket Info</h4>' +
                 '<p><strong>FDA:</strong> ' + (t.fda || 'N/A') + '</p>' +
                 '<p><strong>Cx Partner:</strong> ' + (t.cxPartner || t.excavator || 'N/A') + '</p>' +
                 '<p><strong>Done For:</strong> ' + (t.doneFor || 'N/A') + '</p>' +
                 '<p><strong>Work Type:</strong> ' + (t.workType || 'N/A') + '</p>' +
+                '<p><strong>Footage:</strong> ' + (t.footage ? t.footage + ' ft' : 'N/A') + '</p>' +
                 '<p><strong>Caller:</strong> ' + (t.caller || 'N/A') + ' ' + (t.callerPhone || '') + '</p>' +
                 '<p><strong>Expires:</strong> ' + (t.expires || 'N/A') + '</p>' +
                 '<p><strong>Update By:</strong> ' + (t.shouldUpdateBy || 'N/A') + '</p>' +
                 '<p><strong>PR Status:</strong> ' + (t.prStatus || 'N/A') + '</p>' +
                 '</div></div>';
-
             html += '</div>';
-
-            // Responses section - full width
-            html += '<div class="detail-section" style="margin-top:15px;"><h4>🏢 Utility Responses (' + (summary.total || 0) + ' total: ' +
+            html += '<div class="detail-section" style="margin-top:15px;"><h4>Utility Responses (' + (summary.total || 0) + ' total: ' +
                 (summary.marked || 0) + ' marked, ' + (summary.clear || 0) + ' clear, ' +
                 (summary.unmarked || 0) + ' unmarked, ' + (summary.noResponse || 0) + ' no response)</h4>';
-
             if (t.responses && t.responses.length > 0) {
                 html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">';
                 t.responses.forEach(function(resp) {
@@ -451,7 +429,7 @@
                 });
                 html += '</div>';
             } else {
-                html += '<p>No utility responses recorded. Run converter with --refetch for full response data.</p>';
+                html += '<p>No utility responses recorded.</p>';
             }
             return html + '</div>';
         }
@@ -460,6 +438,47 @@
             var el = document.getElementById('detail-' + ticketId);
             if (el) el.classList.toggle('show');
             if (mapTicketData[ticketId]) selectTicket(ticketId);
+        }
+
+        function downloadCSV() {
+            var headers = ['Ticket #','FDA','Cx Partner','County','City','Street','Intersection','Status','Footage','Expires','Update By','Work Type','Done For','Excavator','Caller','Caller Phone','Driving Directions','Remarks','PR Status','Marked','Clear','Unmarked','No Response'];
+            var rows = [headers.join(',')];
+            allTickets.forEach(function(t) {
+                var s = t.responseSummary || {};
+                var status = t.allClear ? 'All Clear' : t.overallStatus;
+                var row = [
+                    t.ticket || '',
+                    t.fda || '',
+                    (t.cxPartner || t.excavator || '').replace(/,/g, ';'),
+                    t.county || '',
+                    t.city || '',
+                    (t.street || '').replace(/,/g, ';'),
+                    (t.cross1 || '').replace(/,/g, ';'),
+                    status,
+                    t.footage || '',
+                    t.expires || '',
+                    t.shouldUpdateBy || '',
+                    (t.workType || '').replace(/,/g, ';'),
+                    (t.doneFor || '').replace(/,/g, ';'),
+                    (t.excavator || '').replace(/,/g, ';'),
+                    (t.caller || '').replace(/,/g, ';'),
+                    t.callerPhone || '',
+                    '"' + (t.drivingDirections || '').replace(/"/g, '""') + '"',
+                    '"' + (t.remarks || '').replace(/"/g, '""') + '"',
+                    t.prStatus || '',
+                    s.marked || 0,
+                    s.clear || 0,
+                    s.unmarked || 0,
+                    s.noResponse || 0
+                ];
+                rows.push(row.join(','));
+            });
+            var csv = rows.join('\n');
+            var blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+            var link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'TN811_Ticket_Report_' + new Date().toISOString().slice(0,10) + '.csv';
+            link.click();
         }
 
         document.getElementById('searchBox').addEventListener('input', renderTable);
@@ -477,4 +496,3 @@
     </script>
 </body>
 </html>
-
