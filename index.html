@@ -441,39 +441,68 @@
         }
 
         function downloadCSV() {
-            var headers = ['Ticket #','FDA','Cx Partner','County','City','Street','Intersection','Status','Footage','Expires','Update By','Work Type','Done For','Excavator','Caller','Caller Phone','Driving Directions','Remarks','PR Status','Marked','Clear','Unmarked','No Response'];
+            var headers = [
+                'Ticket #','FDA','Cx Partner','County','City','Street','Intersection',
+                'Status','Footage','Expires','Update By','Started','Ticket Date',
+                'Work Type','Done For','Ticket Type','Compliance','Hours Notice',
+                'Excavator','Excavator Phone','Caller','Caller Phone','Caller Email',
+                'Contact','Contact Phone','Contact Email',
+                'Driving Directions','Remarks',
+                'PR Status','Total Responses','Marked','Clear','Unmarked','No Response','Exceptions',
+                'Utility Responses Detail'
+            ];
             var rows = [headers.join(',')];
             allTickets.forEach(function(t) {
                 var s = t.responseSummary || {};
                 var status = t.allClear ? 'All Clear' : t.overallStatus;
+
+                // Build utility responses string
+                var respDetail = (t.responses || []).map(function(r) {
+                    return (r.company || '') + ' [' + (r.utilityTypes || '') + '] = ' + (r.status || '') + (r.date ? ' (' + r.date + ')' : '');
+                }).join(' | ');
+
+                var esc = function(v) { return '"' + (v || '').replace(/"/g, '""') + '"'; };
                 var row = [
                     t.ticket || '',
                     t.fda || '',
-                    (t.cxPartner || t.excavator || '').replace(/,/g, ';'),
+                    esc(t.cxPartner || t.excavator || ''),
                     t.county || '',
                     t.city || '',
-                    (t.street || '').replace(/,/g, ';'),
-                    (t.cross1 || '').replace(/,/g, ';'),
+                    esc(t.street || ''),
+                    esc(t.cross1 || ''),
                     status,
                     t.footage || '',
                     t.expires || '',
                     t.shouldUpdateBy || '',
-                    (t.workType || '').replace(/,/g, ';'),
-                    (t.doneFor || '').replace(/,/g, ';'),
-                    (t.excavator || '').replace(/,/g, ';'),
-                    (t.caller || '').replace(/,/g, ';'),
+                    t.started || '',
+                    t.ticketDate || '',
+                    esc(t.workType || ''),
+                    esc(t.doneFor || ''),
+                    t.ticketType || '',
+                    t.compliance || '',
+                    t.hoursNotice || '',
+                    esc(t.excavator || ''),
+                    t.excavatorPhone || '',
+                    esc(t.caller || ''),
                     t.callerPhone || '',
-                    '"' + (t.drivingDirections || '').replace(/"/g, '""') + '"',
-                    '"' + (t.remarks || '').replace(/"/g, '""') + '"',
+                    t.callerEmail || '',
+                    esc(t.contact || ''),
+                    t.contactPhone || '',
+                    t.contactEmail || '',
+                    esc(t.drivingDirections || ''),
+                    esc(t.remarks || ''),
                     t.prStatus || '',
+                    s.total || 0,
                     s.marked || 0,
                     s.clear || 0,
                     s.unmarked || 0,
-                    s.noResponse || 0
+                    s.noResponse || 0,
+                    s.markedExceptions || 0,
+                    esc(respDetail)
                 ];
                 rows.push(row.join(','));
             });
-            var csv = rows.join('\n');
+            var csv = '\uFEFF' + rows.join('\n');
             var blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
             var link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
