@@ -1,0 +1,6 @@
+# Only track dashboard files
+*
+!.gitignore
+!tn811_dashboard.html
+!SUMMARY-DATA.json
+!index.html

@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tango Fiber - TN 811 Ticket Dashboard</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%);
+            color: #e0e0e0; padding: 20px; min-height: 100vh;
+        }
+        .container { max-width: 1600px; margin: 0 auto; }
+        header {
+            text-align: center; margin-bottom: 30px; padding: 20px;
+            background: rgba(255,255,255,0.05); border-radius: 12px; backdrop-filter: blur(10px);
+        }
+        h1 { color: #fff; font-size: 2.5em; margin-bottom: 10px; text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+        .updated { color: #aaa; font-size: 0.9em; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card {
+            background: rgba(255,255,255,0.08); padding: 20px; border-radius: 12px;
+            text-align: center; border: 1px solid rgba(255,255,255,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .stat-value { font-size: 2.5em; font-weight: bold; margin-bottom: 5px; }
+        .stat-label { color: #aaa; text-transform: uppercase; font-size: 0.8em; letter-spacing: 1px; }
+        .stat-card.clear .stat-value { color: #4caf50; }
+        .stat-card.attention .stat-value { color: #ff9800; }
+        .stat-card.total .stat-value { color: #2196f3; }
+        .stat-card.county .stat-value { color: #ab47bc; font-size: 1.8em; }
+
+        .map-section { margin-bottom: 30px; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
+        .map-header {
+            background: rgba(255,255,255,0.08); padding: 12px 20px;
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+        }
+        .map-header h2 { font-size: 1.2em; color: #fff; }
+        .map-legend { display: flex; gap: 16px; font-size: 0.85em; }
+        .map-legend span { display: flex; align-items: center; gap: 5px; }
+        .legend-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid; }
+        .legend-clear { background: #4caf50; border-color: #4caf50; }
+        .legend-attention { background: #f44336; border-color: #f44336; }
+        .legend-unknown { background: #9e9e9e; border-color: #9e9e9e; }
+        #ticketMap { height: 550px; width: 100%; background: #1a1a2e; }
+        .map-toggle-btn {
+            padding: 6px 14px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.1); color: #fff; cursor: pointer; font-size: 0.85em; transition: all 0.2s;
+        }
+        .map-toggle-btn:hover { background: rgba(255,255,255,0.2); }
+        .map-toggle-btn.active { background: #2196f3; border-color: #2196f3; }
+        .map-deselect-btn {
+            padding: 6px 14px; border-radius: 6px; border: 1px solid rgba(255,152,0,0.5);
+            background: rgba(255,152,0,0.15); color: #ff9800; cursor: pointer; font-size: 0.85em;
+            transition: all 0.2s; display: none;
+        }
+        .map-deselect-btn:hover { background: rgba(255,152,0,0.3); }
+        .map-deselect-btn.show { display: inline-block; }
+
+        .leaflet-popup-content-wrapper {
+            background: #2a2a3e; color: #e0e0e0; border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+        .leaflet-popup-tip { background: #2a2a3e; }
+        .leaflet-popup-content { margin: 12px 16px; font-size: 13px; line-height: 1.6; }
+        .popup-ticket { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+        .popup-status { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+        .popup-clear { background: rgba(76,175,80,0.25); color: #4caf50; }
+        .popup-attention { background: rgba(244,67,54,0.25); color: #f44336; }
+
+        .controls { margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap; align-items: center; }
+        .search-box {
+            flex: 1; min-width: 250px; padding: 12px 20px;
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px; color: #fff; font-size: 1em;
+        }
+        .search-box::placeholder { color: #888; }
+        .filter-button {
+            padding: 12px 24px; background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2); border-radius: 8px;
+            color: #fff; cursor: pointer; transition: all 0.2s; font-size: 0.95em;
+        }
+        .filter-button:hover { background: rgba(255,255,255,0.2); }
+        .filter-button.active { background: #2196f3; border-color: #2196f3; }
+
+        table { width: 100%; background: rgba(255,255,255,0.05); border-radius: 12px; overflow: hidden; border-collapse: collapse; }
+        thead { background: rgba(255,255,255,0.1); }
+        th {
+            padding: 14px 12px; text-align: left; font-weight: 600; text-transform: uppercase;
+            font-size: 0.8em; letter-spacing: 1px; cursor: pointer; user-select: none; white-space: nowrap;
+        }
+        th:hover { background: rgba(255,255,255,0.15); }
+        th.sortable::after { content: ' ↕'; opacity: 0.3; }
+        th.sort-asc::after { content: ' ↑'; opacity: 1; }
+        th.sort-desc::after { content: ' ↓'; opacity: 1; }
+        td { padding: 12px; border-top: 1px solid rgba(255,255,255,0.05); font-size: 0.9em; }
+        tr { transition: background 0.2s; }
+        tbody tr:hover { background: rgba(255,255,255,0.08); cursor: pointer; }
+        tbody tr.highlighted { background: rgba(33,150,243,0.15); }
+
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.8em; font-weight: 600; text-transform: uppercase; white-space: nowrap; }
+        .badge.clear { background: rgba(76,175,80,0.2); color: #4caf50; border: 1px solid #4caf50; }
+        .badge.attention { background: rgba(255,152,0,0.2); color: #ff9800; border: 1px solid #ff9800; }
+        .badge.unmarked { background: rgba(244,67,54,0.2); color: #f44336; border: 1px solid #f44336; }
+        .badge.unknown { background: rgba(158,158,158,0.2); color: #9e9e9e; border: 1px solid #9e9e9e; }
+
+        .detail-row { display: none; background: rgba(0,0,0,0.3); }
+        .detail-row.show { display: table-row; }
+        .detail-content { padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .detail-section { margin-bottom: 15px; }
+        .detail-section h4 { color: #2196f3; margin-bottom: 10px; font-size: 1.1em; }
+        .utility-response { background: rgba(255,255,255,0.05); padding: 10px 15px; margin-bottom: 10px; border-radius: 6px; border-left: 3px solid #666; }
+        .utility-response.clear { border-left-color: #4caf50; }
+        .utility-response.marked { border-left-color: #4caf50; }
+        .utility-response.unmarked { border-left-color: #f44336; }
+        .utility-response.exception { border-left-color: #ff9800; }
+        .utility-company { font-weight: bold; margin-bottom: 5px; }
+        .utility-type { color: #aaa; font-size: 0.9em; margin-bottom: 5px; }
+        .utility-status { font-size: 0.9em; font-weight: 600; }
+        .utility-details { font-size: 0.85em; color: #bbb; margin-top: 5px; }
+        .no-results { text-align: center; padding: 40px; color: #888; font-size: 1.2em; }
+        .loading { text-align: center; padding: 60px; font-size: 1.5em; color: #888; }
+        .fda-tag { background: rgba(171,71,188,0.2); color: #ce93d8; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 1.8em; }
+            .stats { grid-template-columns: 1fr; }
+            #ticketMap { height: 350px; }
+            table { font-size: 0.85em; }
+            th, td { padding: 8px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚧 TN 811 Ticket Dashboard</h1>
+            <div class="updated" id="lastUpdated">Loading...</div>
+        </header>
+
+        <div class="stats" id="stats">
+            <div class="stat-card total"><div class="stat-value" id="totalCount">-</div><div class="stat-label">Total Tickets</div></div>
+            <div class="stat-card clear"><div class="stat-value" id="clearCount">-</div><div class="stat-label">All Clear</div></div>
+            <div class="stat-card attention"><div class="stat-value" id="attentionCount">-</div><div class="stat-label">Need Attention</div></div>
+            <div class="stat-card county"><div class="stat-value" id="countyCount">-</div><div class="stat-label">Counties</div></div>
+        </div>
+
+        <div class="map-section">
+            <div class="map-header">
+                <h2>📍 Ticket Locations</h2>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <button class="map-toggle-btn" id="btnSatellite" onclick="setMapLayer('satellite')">Satellite</button>
+                    <button class="map-toggle-btn active" id="btnStreet" onclick="setMapLayer('street')">Street</button>
+                    <button class="map-deselect-btn" id="btnDeselect" onclick="deselectTicket()">✕ Deselect</button>
+                </div>
+                <div class="map-legend">
+                    <span><div class="legend-dot legend-clear"></div> All Clear</span>
+                    <span><div class="legend-dot legend-attention"></div> Needs Attention</span>
+                    <span><div class="legend-dot legend-unknown"></div> No Data</span>
+                </div>
+            </div>
+            <div id="ticketMap"></div>
+        </div>
+
+        <div class="controls">
+            <input type="text" class="search-box" id="searchBox" placeholder="Search (ticket #, county, city, street, FDA, Cx partner...)">
+            <button class="filter-button active" data-filter="all">All</button>
+            <button class="filter-button" data-filter="clear">All Clear</button>
+            <button class="filter-button" data-filter="attention">Needs Attention</button>
+        </div>
+
+        <div id="tableContainer"><div class="loading">Loading ticket data...</div></div>
+    </div>
+
+    <script>
+        var allTickets = [];
+        var currentFilter = 'all';
+        var currentSort = { column: null, direction: 'asc' };
+        var map, satelliteLayer, streetLayer, labelsLayer;
+        var markersLayer, ghostRectsLayer, highlightLayer;
+        var mapTicketData = {};
+        var selectedTicket = null;
+
+        function initMap() {
+            map = L.map('ticketMap', { zoomControl: true });
+            satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Esri', maxZoom: 19 });
+            streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap', maxZoom: 19 });
+            labelsLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, opacity: 0.7 });
+            streetLayer.addTo(map);
+            ghostRectsLayer = L.layerGroup().addTo(map);
+            markersLayer = L.layerGroup().addTo(map);
+            highlightLayer = L.layerGroup().addTo(map);
+            map.setView([35.5, -86.5], 7); // Tennessee center
+            map.on('click', function(e) { if (selectedTicket && !e.originalEvent._fromMarker) deselectTicket(); });
+        }
+
+        function setMapLayer(type) {
+            if (type === 'satellite') {
+                map.removeLayer(streetLayer);
+                if (!map.hasLayer(satelliteLayer)) satelliteLayer.addTo(map);
+                if (!map.hasLayer(labelsLayer)) labelsLayer.addTo(map);
+                document.getElementById('btnSatellite').classList.add('active');
+                document.getElementById('btnStreet').classList.remove('active');
+            } else {
+                map.removeLayer(satelliteLayer); map.removeLayer(labelsLayer);
+                if (!map.hasLayer(streetLayer)) streetLayer.addTo(map);
+                document.getElementById('btnStreet').classList.add('active');
+                document.getElementById('btnSatellite').classList.remove('active');
+            }
+        }
+
+        function getTicketColor(t) {
+            if (t.allClear) return '#4caf50';
+            if (t.overallStatus === 'UNKNOWN') return '#9e9e9e';
+            return '#f44336';
+        }
+
+        function buildPopupHtml(t) {
+            var statusText = t.allClear ? 'ALL CLEAR' : (t.overallStatus || 'UNKNOWN');
+            var statusClass = t.allClear ? 'popup-clear' : 'popup-attention';
+            var summary = t.responseSummary || {};
+            return '<div class="popup-ticket">' + t.ticket + '</div>' +
+                '<span class="popup-status ' + statusClass + '">' + statusText + '</span><br><br>' +
+                (t.fda ? '<strong>FDA:</strong> ' + t.fda + '<br>' : '') +
+                '<strong>Location:</strong> ' + (t.street || 'N/A') + (t.cross1 ? ' / ' + t.cross1 : '') + '<br>' +
+                '<strong>City:</strong> ' + (t.city || 'N/A') + ', ' + (t.county || '') + '<br>' +
+                '<strong>Work:</strong> ' + (t.workType || 'N/A') + '<br>' +
+                '<strong>Cx Partner:</strong> ' + (t.cxPartner || t.excavator || 'N/A') + '<br>' +
+                '<strong>Expires:</strong> ' + (t.expires || 'N/A') + '<br>' +
+                '<strong>Responses:</strong> ' + (summary.marked || 0) + ' marked, ' +
+                (summary.clear || 0) + ' clear, ' + (summary.unmarked || 0) + ' unmarked';
+        }
+
+        function renderMap(tickets) {
+            ghostRectsLayer.clearLayers(); markersLayer.clearLayers(); highlightLayer.clearLayers();
+            mapTicketData = {}; selectedTicket = null;
+            document.getElementById('btnDeselect').classList.remove('show');
+            var bounds = [];
+            tickets.forEach(function(t) {
+                if (!t.boundary) return;
+                var b = t.boundary, sw = [b.s, b.w], ne = [b.n, b.e];
+                var center = [(b.n + b.s) / 2, (b.w + b.e) / 2];
+                var color = getTicketColor(t);
+                bounds.push(sw, ne);
+                var ghostRect = L.rectangle([sw, ne], { color: color, weight: 1, opacity: 0.25, fillColor: color, fillOpacity: 0.06, interactive: false });
+                ghostRectsLayer.addLayer(ghostRect);
+                var marker = L.circleMarker(center, { radius: 7, color: '#fff', weight: 2, opacity: 0.9, fillColor: color, fillOpacity: 0.9 });
+                marker.bindPopup(buildPopupHtml(t), { maxWidth: 340 });
+                marker.bindTooltip(t.ticket, { direction: 'top', offset: [0, -8] });
+                marker.on('click', function(e) { e.originalEvent._fromMarker = true; selectTicket(t.ticket); });
+                markersLayer.addLayer(marker);
+                mapTicketData[t.ticket] = { marker: marker, ghostRect: ghostRect, bounds: [sw, ne], color: color, ticket: t };
+            });
+            if (bounds.length > 0) map.fitBounds(bounds, { padding: [30, 30], maxZoom: 15 });
+        }
+
+        function selectTicket(ticketNum) {
+            highlightLayer.clearLayers();
+            ghostRectsLayer.eachLayer(function(l) { l.setStyle({ opacity: 0.08, fillOpacity: 0.02 }); });
+            markersLayer.eachLayer(function(l) { l.setStyle({ opacity: 0.3, fillOpacity: 0.3 }); });
+            var data = mapTicketData[ticketNum];
+            if (!data) return;
+            selectedTicket = ticketNum;
+            var brightRect = L.rectangle(data.bounds, { color: data.color, weight: 4, opacity: 1, fillColor: data.color, fillOpacity: 0.35, interactive: false });
+            highlightLayer.addLayer(brightRect);
+            data.marker.setStyle({ opacity: 1, fillOpacity: 1 }); data.marker.setRadius(10); data.marker.openPopup();
+            map.fitBounds(data.bounds, { padding: [80, 80], maxZoom: 17 });
+            document.getElementById('btnDeselect').classList.add('show');
+            document.querySelectorAll('tbody tr').forEach(function(r) { r.classList.remove('highlighted'); });
+            var row = document.querySelector('tr[data-ticket="' + ticketNum + '"]');
+            if (row) row.classList.add('highlighted');
+        }
+
+        function deselectTicket() {
+            selectedTicket = null; highlightLayer.clearLayers();
+            ghostRectsLayer.eachLayer(function(l) { l.setStyle({ opacity: 0.25, fillOpacity: 0.06 }); });
+            markersLayer.eachLayer(function(l) { l.setStyle({ opacity: 0.9, fillOpacity: 0.9 }); l.setRadius(7); });
+            var bounds = [];
+            Object.keys(mapTicketData).forEach(function(k) { bounds.push(mapTicketData[k].bounds[0], mapTicketData[k].bounds[1]); });
+            if (bounds.length > 0) map.fitBounds(bounds, { padding: [30, 30], maxZoom: 15 });
+            document.getElementById('btnDeselect').classList.remove('show');
+            document.querySelectorAll('tbody tr').forEach(function(r) { r.classList.remove('highlighted'); });
+        }
+
+        async function loadData() {
+            try {
+                var response = await fetch('SUMMARY-DATA.json');
+                var data = await response.json();
+                document.getElementById('lastUpdated').textContent = 'Last updated: ' + (data.generated || 'Unknown');
+                document.getElementById('totalCount').textContent = data.totalTickets || 0;
+                document.getElementById('clearCount').textContent = data.allClearCount || 0;
+                document.getElementById('attentionCount').textContent = data.attentionCount || 0;
+                allTickets = data.tickets || [];
+                // Count unique counties
+                var counties = {};
+                allTickets.forEach(function(t) { if (t.county) counties[t.county] = true; });
+                document.getElementById('countyCount').textContent = Object.keys(counties).length;
+                renderTable();
+                renderMap(allTickets);
+            } catch (error) {
+                document.getElementById('tableContainer').innerHTML = '<div class="no-results">❌ Error loading SUMMARY-DATA.json. Run tn811_to_dashboard.py first.</div>';
+                console.error(error);
+            }
+        }
+
+        function getStatusBadge(ticket) {
+            if (ticket.allClear) return '<span class="badge clear">All Clear</span>';
+            if (ticket.hasUnmarked) return '<span class="badge unmarked">Unmarked</span>';
+            if (ticket.hasNoResponse) return '<span class="badge attention">No Response</span>';
+            if (ticket.hasExceptions) return '<span class="badge attention">Exceptions</span>';
+            return '<span class="badge unknown">Unknown</span>';
+        }
+
+        function renderTable() {
+            var searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            var filtered = allTickets.filter(function(t) {
+                if (currentFilter === 'clear' && !t.allClear) return false;
+                if (currentFilter === 'attention' && t.allClear) return false;
+                if (searchTerm) {
+                    var s = [t.ticket, t.city, t.county, t.street, t.cross1, t.fda, t.cxPartner, t.excavator, t.doneFor, t.workType].join(' ').toLowerCase();
+                    if (!s.includes(searchTerm)) return false;
+                }
+                return true;
+            });
+
+            if (currentSort.column) {
+                filtered.sort(function(a, b) {
+                    var vA = a[currentSort.column] || '', vB = b[currentSort.column] || '';
+                    if (vA < vB) return currentSort.direction === 'asc' ? -1 : 1;
+                    if (vA > vB) return currentSort.direction === 'asc' ? 1 : -1;
+                    return 0;
+                });
+            }
+
+            if (filtered.length === 0) {
+                document.getElementById('tableContainer').innerHTML = '<div class="no-results">No tickets match your search/filter.</div>';
+                return;
+            }
+
+            var html = '<table><thead><tr>' +
+                '<th class="sortable" data-column="ticket">Ticket #</th>' +
+                '<th class="sortable" data-column="fda">FDA</th>' +
+                '<th class="sortable" data-column="cxPartner">Cx Partner</th>' +
+                '<th class="sortable" data-column="county">County</th>' +
+                '<th class="sortable" data-column="city">City</th>' +
+                '<th class="sortable" data-column="street">Street</th>' +
+                '<th>Status</th>' +
+                '<th>Pending</th>' +
+                '<th class="sortable" data-column="expires">Expires</th>' +
+                '<th class="sortable" data-column="workType">Work Type</th>' +
+                '<th style="width:30px;"></th>' +
+                '</tr></thead><tbody>';
+
+            filtered.forEach(function(t) {
+                var summary = t.responseSummary || {};
+                var pendingUtilities = (t.responses || [])
+                    .filter(function(r) { return r.status === 'UNMARKED' || r.status === 'NO RESPONSE'; })
+                    .map(function(r) { return r.company.split(' - ')[0].split('(')[0].trim(); })
+                    .filter(function(n) { return n; });
+                var pendingDisplay = pendingUtilities.length > 0 ? pendingUtilities.join(', ') : '-';
+                var hasMap = t.boundary ? '📍' : '';
+
+                html += '<tr data-ticket="' + t.ticket + '" onclick="onRowClick(\'' + t.ticket + '\')">' +
+                    '<td><strong>' + t.ticket + '</strong></td>' +
+                    '<td>' + (t.fda ? '<span class="fda-tag">' + t.fda + '</span>' : '-') + '</td>' +
+                    '<td>' + (t.cxPartner || t.excavator || '-') + '</td>' +
+                    '<td>' + (t.county || '-') + '</td>' +
+                    '<td>' + (t.city || '-') + '</td>' +
+                    '<td>' + (t.street || '-') + ' ' + (t.cross1 ? '/ ' + t.cross1 : '') + '</td>' +
+                    '<td>' + getStatusBadge(t) + '</td>' +
+                    '<td style="font-size:0.82em;color:#d97706;">' + pendingDisplay + '</td>' +
+                    '<td>' + (t.expires || '-') + '</td>' +
+                    '<td style="font-size:0.82em;">' + (t.workType || '-') + '</td>' +
+                    '<td style="text-align:center;">' + (hasMap ? '<span style="cursor:pointer;font-size:1.1em;" onclick="event.stopPropagation();selectTicket(\'' + t.ticket + '\')" title="Show on map">' + hasMap + '</span>' : '') + '</td>' +
+                    '</tr>' +
+                    '<tr class="detail-row" id="detail-' + t.ticket + '">' +
+                    '<td colspan="11"><div class="detail-content">' + renderDetail(t) + '</div></td></tr>';
+            });
+
+            html += '</tbody></table>';
+            document.getElementById('tableContainer').innerHTML = html;
+
+            document.querySelectorAll('th').forEach(function(th) {
+                th.classList.remove('sort-asc', 'sort-desc');
+                if (th.dataset.column === currentSort.column) th.classList.add(currentSort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+            });
+            document.querySelectorAll('th.sortable').forEach(function(th) {
+                th.addEventListener('click', function() {
+                    var col = th.dataset.column;
+                    if (currentSort.column === col) currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+                    else { currentSort.column = col; currentSort.direction = 'asc'; }
+                    renderTable();
+                });
+            });
+        }
+
+        function renderDetail(t) {
+            var summary = t.responseSummary || {};
+            var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">';
+
+            // Left column
+            html += '<div><div class="detail-section"><h4>📍 Location</h4>' +
+                '<p><strong>Address:</strong> ' + (t.street || 'N/A') + '</p>' +
+                '<p><strong>Intersection:</strong> ' + (t.cross1 || 'N/A') + '</p>' +
+                '<p><strong>City:</strong> ' + (t.city || 'N/A') + ', ' + (t.county || '') + ' Co.</p>' +
+                '<p><strong>Directions:</strong> ' + (t.drivingDirections || 'N/A') + '</p>' +
+                '<p><strong>Remarks:</strong> ' + (t.remarks || 'N/A') + '</p>' +
+                '</div></div>';
+
+            // Right column
+            html += '<div><div class="detail-section"><h4>📋 Ticket Info</h4>' +
+                '<p><strong>FDA:</strong> ' + (t.fda || 'N/A') + '</p>' +
+                '<p><strong>Cx Partner:</strong> ' + (t.cxPartner || t.excavator || 'N/A') + '</p>' +
+                '<p><strong>Done For:</strong> ' + (t.doneFor || 'N/A') + '</p>' +
+                '<p><strong>Work Type:</strong> ' + (t.workType || 'N/A') + '</p>' +
+                '<p><strong>Caller:</strong> ' + (t.caller || 'N/A') + ' ' + (t.callerPhone || '') + '</p>' +
+                '<p><strong>Expires:</strong> ' + (t.expires || 'N/A') + '</p>' +
+                '<p><strong>Update By:</strong> ' + (t.shouldUpdateBy || 'N/A') + '</p>' +
+                '<p><strong>PR Status:</strong> ' + (t.prStatus || 'N/A') + '</p>' +
+                '</div></div>';
+
+            html += '</div>';
+
+            // Responses section - full width
+            html += '<div class="detail-section" style="margin-top:15px;"><h4>🏢 Utility Responses (' + (summary.total || 0) + ' total: ' +
+                (summary.marked || 0) + ' marked, ' + (summary.clear || 0) + ' clear, ' +
+                (summary.unmarked || 0) + ' unmarked, ' + (summary.noResponse || 0) + ' no response)</h4>';
+
+            if (t.responses && t.responses.length > 0) {
+                html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">';
+                t.responses.forEach(function(resp) {
+                    var sc = 'clear';
+                    if (resp.status === 'UNMARKED' || resp.status === 'NO RESPONSE') sc = 'unmarked';
+                    else if (resp.status === 'MARKED WITH EXCEPTIONS') sc = 'exception';
+                    else if (resp.status === 'MARKED') sc = 'marked';
+                    html += '<div class="utility-response ' + sc + '">' +
+                        '<div class="utility-company">' + resp.company + '</div>' +
+                        '<div class="utility-type">' + (resp.utilityTypes || '') + '</div>' +
+                        '<div class="utility-status" style="color:' + (sc === 'unmarked' ? '#f44336' : sc === 'exception' ? '#ff9800' : '#4caf50') + '">' + resp.status + '</div>' +
+                        (resp.date ? '<div class="utility-details">Responded: ' + resp.date + '</div>' : '') +
+                        '</div>';
+                });
+                html += '</div>';
+            } else {
+                html += '<p>No utility responses recorded. Run converter with --refetch for full response data.</p>';
+            }
+            return html + '</div>';
+        }
+
+        function onRowClick(ticketId) {
+            var el = document.getElementById('detail-' + ticketId);
+            if (el) el.classList.toggle('show');
+            if (mapTicketData[ticketId]) selectTicket(ticketId);
+        }
+
+        document.getElementById('searchBox').addEventListener('input', renderTable);
+        document.querySelectorAll('.filter-button').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-button').forEach(function(b) { b.classList.remove('active'); });
+                btn.classList.add('active');
+                currentFilter = btn.dataset.filter;
+                renderTable();
+            });
+        });
+
+        initMap();
+        loadData();
+    </script>
+</body>
+</html>
